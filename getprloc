@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ -z $1 ]; then
+    echo "Error: no argument is given" 
+    echo "Try: $0 <pull request ID>"
+else
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+        echo "getting pull request ID -> $1"
+        git fetch origin pull/$1/head
+    else
+        echo "Error: your are supposed to enter pull request ID number not '$1'"
+    fi
+fi
