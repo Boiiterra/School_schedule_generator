@@ -12,4 +12,4 @@ In order to get pull request and test it locally type in console:
 
 ## Description
 
-This application is going to generate school schedule based on input data. Data will be stored locally.
+This application is going to generate school schedule based on input data, that will be stored locally.
