@@ -12,4 +12,5 @@ In order to get pull request and test it locally type in console:
 
 ## Description
 
-This application is going to generate school schedule based on input data, that will be stored locally.
+This application is going to generate school schedule based on input data, that will be stored locally. This data won't be deleted unless user decides to do so.
+Also all data is going to be easily displayed if user needs to check whether it is correct. 
