@@ -8,4 +8,8 @@ In order to get pull request and test it locally type in console:
 ./getprloc <Pull Request's ID number>
 ```
 
-</details>
+</details><br>
+
+## Description
+
+This application is going to generate school schedule based on input data. Data will be stored locally.
