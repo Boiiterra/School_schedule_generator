@@ -14,7 +14,7 @@ This application is going to generate school schedule based on input data, that 
 # Authors
 
 <table>
-    <tr align="center"  width="60">
+    <tr align="center" width="60">
         <th>
             <a href="https://github.com/TerraBoii">
                 <kbd><img border="2" width="60" src="https://avatars.githubusercontent.com/u/81579070?v=4" alt="TerraBoii" title="TerraBoii"></kbd>
