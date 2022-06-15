@@ -3,6 +3,7 @@
 <br>
 
 # Description
+The application is in Russian language. \
 This application is going to generate school schedule based on input data, that will be stored locally. The schedule itself will be stored in an excel document. Data won't be deleted unless user decides to do so. Also all data is going to be easily displayed if user needs to check whether it is correct.
 
 <br>
