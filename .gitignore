@@ -140,3 +140,6 @@ launcher.aip
 
 # Visual Studio Code
 .vscode/
+
+# User's data
+data.db
