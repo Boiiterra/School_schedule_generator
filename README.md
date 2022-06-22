@@ -17,6 +17,7 @@ This application provides tools that are going to help in school schedule creati
     - [ ] Extra buttons
   - [ ] About app window
   - [ ] Help window
+  - [ ] Better menubar
 - [ ] Create basic tools
   - [x] Create/delete class
   - [ ] Tools to edit lessons schedule
