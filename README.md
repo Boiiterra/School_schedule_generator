@@ -8,14 +8,14 @@ This application provides tools that are going to help in school schedule creati
 
 ## Project is in development
 - [ ] Create UI
-  - [ ] Main window
+  - [x] Main window
     - [x] Class' cards
-    - [ ] Tools buttons
+    - [x] Tools buttons
   - [ ] Class' schedule window
-    - [ ] Days of the week with up to ~10 lessons (table)
+    - [x] Days of the week with 9 lessons (table)
     - [ ] Window with lessons' hours per week
-    - [ ] Extra buttons
-  - [ ] About app window
+    - [x] Extra buttons
+  - [x] About app window
   - [ ] Help window
   - [ ] Better menubar
 - [ ] Create basic tools
