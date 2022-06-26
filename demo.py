@@ -631,8 +631,8 @@ class ScheduleTable(Frame):
             else:
                 _bg1 = "#c5c5c5"
                 _bg2 = "#d9d9d9"
-            Label(self, text=number+1, width=1, font=s_f, bg=_bg1).grid(column=0, row=number+1, sticky="snew", ipadx=2, ipady=2)
-            Label(self, font=s_f, width=26, bg=_bg2, text=f"test{number+1}").grid(column=1, row=number+1, sticky="snew", padx=2, pady=2)
+            Label(self, text=number+1, width=1, font=s_f, bg=_bg1).grid(column=0, row=number+1, sticky="nsew", ipadx=2, ipady=2)
+            Label(self, font=s_f, width=26, bg=_bg2, text=f"test{number+1}").grid(column=1, row=number+1, sticky="nsew", padx=2, pady=2)
 
         def add():
             if lessons:
@@ -659,13 +659,13 @@ class ScheduleTable(Frame):
         add_lesson = Button(self, image=plus, bg=bg2, bd=0, activebackground=bg, cursor="hand2", compound="left", text="Добавить урок", font=s_f,
                             command=add)
         add_lesson.image = plus
-        add_lesson.grid(row=10, column=0, columnspan=2, pady=2, sticky="snew")
+        add_lesson.grid(row=10, column=0, columnspan=2, pady=2, sticky="nsew")
 
         minus = ImageTk.PhotoImage(Image.open('remove.png').resize((25, 25)))
         remove_lesson = Button(self, image=minus, bg=bg2, bd=0, activebackground=bg, cursor="hand2", compound="left", text="Удалить урок", font=s_f,
                                command=remove)
         remove_lesson.image = minus
-        remove_lesson.grid(row=11, column=0, columnspan=2, pady=2, sticky="snew")
+        remove_lesson.grid(row=11, column=0, columnspan=2, pady=2, sticky="nsew")
 
     def grid(self, **kwargs):
         self.grid_configure(kwargs, pady=15, padx=14)
