@@ -3,6 +3,7 @@ from tkinter.messagebox import showinfo
 from webbrowser import open_new_tab
 from PIL import Image, ImageTk
 from platform import system
+import sqlite3
 
 # Colors
 fg = "#3f3f3f" # Foreground active
@@ -15,8 +16,11 @@ s_f = ("Arial", 15) # Small font
 ss_f = ("TkDefaultFont", 12) # Super small font
 width = 1050
 height = 620
-card_id = 0 # Card's index (is used for positioning them on screen)
-cards = [] # Empty list for cards
+c_card_id = 0 # Card's index (is used for positioning them on screen)
+c_cards = [] # Empty list for class cards
+# Cards example: [["db_id", "Year", "<class_instance>"], ...]
+s_card_id = 0 # Card's index (is used for positioning them on screen)
+s_cards = [] # Empty list for subject cards
 # Cards example: [["db_id", "Year", "<class_instance>"], ...]
 lessons = [] # Empty list for lessons
 # Lessons example: [["Lesson", hours, "class"]]
@@ -142,15 +146,15 @@ class CardDelWarn(Toplevel):
         def run(do=False):
             if do:
                 found = False
-                # Find and delete element from list "cards"
-                for pos, info in enumerate(cards):
+                # Find and delete element from list "c_cards"
+                for pos, info in enumerate(c_cards):
                     if card in info:
                         found = True
-                        cards.remove(info)
-                    if found and 0 <= pos < len(cards):
-                        cards[pos][0] = cards[pos][0] - 1
-                        cards[pos][-1].grid_forget()
-                        cards[pos][-1].grid(row=(pos // 12), column=((pos % 12)), padx=15, pady=15)
+                        c_cards.remove(info)
+                    if found and 0 <= pos < len(c_cards):
+                        c_cards[pos][0] = c_cards[pos][0] - 1
+                        c_cards[pos][-1].grid_forget()
+                        c_cards[pos][-1].grid(row=(pos // 12), column=((pos % 12)), padx=15, pady=15)
 
                 card.destroy()
                 parent.geometry(f"{parent.winfo_width()}x{parent.winfo_height() + 1}")
@@ -188,16 +192,16 @@ class Links(Label):
 
 class Year(Frame):
     def __init__(self, parent, year, letter):
-        global cards, card_id
+        global c_cards, c_card_id
         Frame.__init__(self, parent, width=70, height=50, bg=bg)
         full_year = f"{year}{letter}"
         self.full_year = full_year
-        data = [card_id, self.full_year, self]
-        card_id += 1
-        cards.append(data)
-        cards[-2], cards[-1] = cards[-1], cards[-2]
-        cards[-1][0] += 1
-        cards[-1][-1].grid(row=cards[-1][0] // 12, column=cards[-1][0] % 12)
+        data = [c_card_id, self.full_year, self]
+        c_card_id += 1
+        c_cards.append(data)
+        c_cards[-2], c_cards[-1] = c_cards[-1], c_cards[-2]
+        c_cards[-1][0] += 1
+        c_cards[-1][-1].grid(row=c_cards[-1][0] // 12, column=c_cards[-1][0] % 12)
 
         def remove():
             remove_btn.config(state="disabled")
@@ -303,7 +307,7 @@ class MainPage(Frame):
         add_card = Button(ui, image=plus, width=50, height=50, bg=bg2, bd=0, activebackground=bg, cursor="hand2",
                           command=lambda: AddYear(parent, [ui, add_card.grid_info()["row"], add_card.grid_info()["column"]]))
         add_card.image = plus
-        cards.append([0, None, add_card])
+        c_cards.append([0, None, add_card])
         add_card.grid(row=0, column=0, padx=15, pady=15)
 
         for i in range(230):
@@ -346,8 +350,8 @@ class AddYear(Toplevel):
             if _number != "" and _letter != "":
                 number.delete(0, "end")
                 letter.delete(0, "end")
-                # Find and delete element from list "cards"
-                for info in cards:
+                # Find and delete element from list "c_cards"
+                for info in c_cards:
                     if f"{_number}{_letter}" in info:
                         showinfo("Class exists", f"Класс {_number}{_letter} уже существует попробуйте другой")
                         break
