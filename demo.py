@@ -19,7 +19,7 @@ card_id = 0 # Card's index (is used for positioning them on screen)
 cards = [] # Empty list for cards
 # Cards example: [["db_id", "Year", "<class_instance>"], ...]
 lessons = [] # Empty list for lessons
-# Lessons example: [["Lesson", hours]]
+# Lessons example: [["Lesson", hours, "class"]]
 
 
 class MainAppBody(Tk):
@@ -221,6 +221,14 @@ class Year(Frame):
         self.grid_configure(kwargs, padx=5, pady=5, sticky="nw")
 
 
+class Lesson(Frame):
+    def __init__(self, parent, name, teacher):
+        Frame.__init__(self, parent)
+
+        Label(self, text=name, font=ss_f).grid(row=0, column=0)
+        Label(self, text=teacher, font=ss_f).grid(row=0, column=0)
+
+
 class MainPage(Frame):
 
     def __init__(self, parent):
@@ -231,7 +239,7 @@ class MainPage(Frame):
         top.pack(side="top", expand=True, fill="both")
         self.top = top
 
-        bottom = Frame(self, height=50, bg=fg)
+        bottom = Frame(self, height=50, bg="#d2d2d2")
         bottom.pack(side="bottom", fill="both")
 
         def _import(): ...
@@ -244,7 +252,7 @@ class MainPage(Frame):
                             command=_import)
         import_btn.pack(side="left", padx=35, pady=5)
 
-        export_btn = Button(bottom, bd=0, text="Экспрот", bg=bg1, activebackground=bg, activeforeground=fg, font=m_f,
+        export_btn = Button(bottom, bd=0, text="Экспорт", bg=bg1, activebackground=bg, activeforeground=fg, font=m_f,
                             command=_export)
         export_btn.pack(side="left", pady=5)
 
@@ -253,7 +261,6 @@ class MainPage(Frame):
         generate_schedule.pack(side="right", pady=5, padx=35)
 
         canvas = Canvas(top)
-        # canvas.grid(row=0, column=0, sticky="nsew")
         canvas.pack(side="left", fill="both", expand=True)
         self.canvas = canvas
 
@@ -353,7 +360,6 @@ class AddYear(Toplevel):
         self.add_btn = add_btn
 
     def validate_int(self, action, index, value):
-        """Enter only integer values"""
         if value != "":
             # Integers does not start from zero
             if index == "0" and value == "0":
@@ -367,7 +373,6 @@ class AddYear(Toplevel):
             return False
 
     def validate_char(self, action, value):
-        """Enter only integer values"""
         # Entry validation
         if len(value) > 1 and action == "1":  # Limiting input length
             return False
@@ -425,7 +430,6 @@ class AddSubject(Toplevel):
         self.add_btn = add_btn
 
     def validate_int(self, action, index, value):
-        """Enter only integer values"""
         if value != "":
             # Integers does not start from zero
             if index == "0" and value == "0":
@@ -439,7 +443,6 @@ class AddSubject(Toplevel):
             return False
 
     def validate_char(self, action, value):
-        """Enter only integer values"""
         # Entry validation
         if len(value) > 25 and action == "1":  # Limiting input length
             return False
@@ -497,7 +500,6 @@ class AddLesson(Toplevel):
         self.add_btn = add_btn
 
     def validate_int(self, action, index, value):
-        """Enter only integer values"""
         if value != "":
             # Integers does not start from zero
             if index == "0" and value == "0":
@@ -511,7 +513,6 @@ class AddLesson(Toplevel):
             return False
 
     def validate_char(self, action, value):
-        """Enter only integer values"""
         # Entry validation
         if len(value) > 25 and action == "1":  # Limiting input length
             return False
@@ -576,7 +577,7 @@ class RemoveLesson(Toplevel):
             self.confirm_btn.config(state="normal")
             self.lesson.config(text=f"Будет удалён урок номер {value[0]}:\n" \
                                     f"{self.location.grid_slaves(row=int(value[0]))[0].cget('text')},\n" \
-                                    f"в день {self.location.grid_slaves(row=0)[0].cget('text')}")
+                                    f"в день: {self.location.grid_slaves(row=0)[0].cget('text')}")
         elif len(value) < 1 and all(symbol in "123456789" for symbol in value):
             self.confirm_btn.config(state="disabled")
             self.lesson.config(text="")
@@ -653,11 +654,10 @@ class LessonSchedule(Frame):
         top.pack(side="top", expand=True, fill="both")
         self.top = top
 
-        bottom = Frame(self, height=50, bg=fg)
+        bottom = Frame(self, height=50, bg="#d2d2d2")
         bottom.pack(side="bottom", fill="both")
 
         canvas = Canvas(top)
-        # canvas.grid(row=0, column=0, sticky="nsew")
         canvas.pack(side="left", fill="both", expand=True)
 
         scrollbar = AutoScrollbar(top, orient="vertical", command=canvas.yview, width=20)
@@ -715,11 +715,26 @@ class LessonHoursA(Frame):
     def __init__(self, parent, year):
         Frame.__init__(self, parent)
         self.parent = parent
+        self.year = year
 
-        Label(self, text=str(year), font=("Hetlevica", 25)).pack()
+        top = Frame(self)
+        top.pack(side="top", expand=True, fill="both")
+        self.top = top
 
         bottom = Frame(self, height=50, bg=fg)
         bottom.pack(side="bottom", fill="both")
+
+        canvas = Canvas(top)
+        canvas.pack(side="left", fill="both", expand=True)
+
+        scrollbar = AutoScrollbar(top, orient="vertical", command=canvas.yview, width=20)
+
+        canvas.config(yscrollcommand=scrollbar.set)
+        canvas.bind("<Configure>", lambda _: canvas.config(scrollregion=canvas.bbox("all")))
+        self.canvas = canvas
+
+        ui = Frame(canvas) # User Interface
+        canvas.create_window((0, 0), window=ui, anchor="nw")
 
         def cancel():
             parent.show_frame(LessonSchedule, self, extra=year)
@@ -731,6 +746,21 @@ class LessonHoursA(Frame):
         cancel_btn = Button(bottom, bd=0, text="Отмена", bg=bg1, activebackground=bg, activeforeground=fg, font=m_f,
                                    command=cancel)
         cancel_btn.pack(side="right", pady=5)
+
+        self.parent.bind("<MouseWheel>", self.mouse_wheel) # Windows mouse wheel event
+        self.parent.bind("<Button-4>", self.mouse_wheel) # Linux mouse wheel event (Up)
+        self.parent.bind("<Button-5>", self.mouse_wheel) # Linux mouse wheel event (Down)
+
+    def mouse_wheel(self, event):
+        """ Mouse wheel as scroll bar """
+        direction = 0
+        # respond to Linux or Windows wheel event
+        if event.num == 5 or event.delta == -120:
+            direction = 1
+        if event.num == 4 or event.delta == 120:
+            direction = -1
+        if "AutoScrollbar" in str(self.top.pack_slaves()):
+            self.canvas.yview_scroll(direction, "units")
 
 
 class LessonHoursI(Frame):
@@ -739,11 +769,26 @@ class LessonHoursI(Frame):
     def __init__(self, parent, year):
         Frame.__init__(self, parent)
         self.parent = parent
+        self.year = year
 
-        Label(self, text=str(year), font=("Hetlevica", 25)).pack()
+        top = Frame(self)
+        top.pack(side="top", expand=True, fill="both")
+        self.top = top
 
         bottom = Frame(self, height=50, bg=fg)
         bottom.pack(side="bottom", fill="both")
+
+        canvas = Canvas(top)
+        canvas.pack(side="left", fill="both", expand=True)
+
+        scrollbar = AutoScrollbar(top, orient="vertical", command=canvas.yview, width=20)
+
+        canvas.config(yscrollcommand=scrollbar.set)
+        canvas.bind("<Configure>", lambda _: canvas.config(scrollregion=canvas.bbox("all")))
+        self.canvas = canvas
+
+        ui = Frame(canvas) # User Interface
+        canvas.create_window((0, 0), window=ui, anchor="nw")
 
         def cancel():
             parent.show_frame(LessonSchedule, self, extra=year)
@@ -755,6 +800,21 @@ class LessonHoursI(Frame):
         cancel_btn = Button(bottom, bd=0, text="Отмена", bg=bg1, activebackground=bg, activeforeground=fg, font=m_f,
                                    command=cancel)
         cancel_btn.pack(side="right", pady=5)
+
+        self.parent.bind("<MouseWheel>", self.mouse_wheel) # Windows mouse wheel event
+        self.parent.bind("<Button-4>", self.mouse_wheel) # Linux mouse wheel event (Up)
+        self.parent.bind("<Button-5>", self.mouse_wheel) # Linux mouse wheel event (Down)
+
+    def mouse_wheel(self, event):
+        """ Mouse wheel as scroll bar """
+        direction = 0
+        # respond to Linux or Windows wheel event
+        if event.num == 5 or event.delta == -120:
+            direction = 1
+        if event.num == 4 or event.delta == 120:
+            direction = -1
+        if "AutoScrollbar" in str(self.top.pack_slaves()):
+            self.canvas.yview_scroll(direction, "units")
 
 
 class Help(Toplevel):
