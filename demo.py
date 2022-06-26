@@ -225,8 +225,35 @@ class Lesson(Frame):
     def __init__(self, parent, name, teacher):
         Frame.__init__(self, parent)
 
-        Label(self, text=name, font=ss_f).grid(row=0, column=0)
-        Label(self, text=teacher, font=ss_f).grid(row=0, column=0)
+        def increase():
+            amount.config(text=(int(amount.cget("text")) + 1))
+
+        def decrease():
+            amount.config(text=(int(amount.cget("text")) - 1))
+
+        element_1 = Frame(self)
+        element_1.grid(row=0, column=0)
+
+        Label(element_1, text=name, font=s_f).grid(row=0, column=0)
+        Label(element_1, text=f"({teacher})", font=s_f).grid(row=1, column=0)
+
+        element_2 = Frame(self, padx=20)
+        element_2.grid(row=0, column=1)
+
+        plus = ImageTk.PhotoImage(Image.open('add.png').resize((25, 25)))
+        increase_hours = Button(element_2, image=plus, bg=bg2, bd=0, activebackground=bg, cursor="hand2", font=s_f,
+                            command=increase)
+        increase_hours.image = plus
+        increase_hours.grid(row=0, column=0, sticky="nsew")
+
+        amount = Label(element_2, text=1, font=s_f)
+        amount.grid(row=0, column=1, sticky="nsew")
+
+        minus = ImageTk.PhotoImage(Image.open('remove.png').resize((25, 25)))
+        decrease_hours = Button(element_2, image=minus, bg=bg2, bd=0, activebackground=bg, cursor="hand2", font=s_f,
+                               command=decrease)
+        decrease_hours.image = minus
+        decrease_hours.grid(row=0, column=2, sticky="nsew")
 
 
 class MainPage(Frame):
