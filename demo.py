@@ -221,7 +221,7 @@ class Year(Frame):
         self.grid_configure(kwargs, padx=5, pady=5, sticky="nw")
 
 
-class Lesson(Frame):
+class Subject(Frame):
     def __init__(self, parent, name, teacher):
         Frame.__init__(self, parent)
 
