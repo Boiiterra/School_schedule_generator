@@ -63,8 +63,8 @@ class MainAppBody(Tk):
         self.binding_1 = self.bind("<Button-4>", self.mouse_wheel) # Linux mouse wheel event (Up)
         self.binding_2 = self.bind("<Button-5>", self.mouse_wheel) # Linux mouse wheel event (Down)
 
-    # This is used to show any page and user's location
     def show_frame(self, new, prev=None, extra=None, launch=True):
+        """Used to show any page and user's location"""
         if prev is not None:
             prev.pack_forget()
         if extra is not None and not "MainPage".lower() in str(new).lower():
@@ -95,8 +95,8 @@ class MainAppBody(Tk):
             self.menubar.delete(self.menubar.index(f"{prev.user_position} {extra}"))
             self.menubar.add_command(label=f"Станица класса {extra}", activebackground=self.menubar.cget("background"))
 
-    # Gets methods of the given page and its variables with "self." in front of them, ex.: self.variable_name)
     def get_page(self, page_class):
+        """Gets methods of the given page and its variables with "self." in front of them, ex.: self.variable_name)"""
         return self.frames[page_class]
 
     def mouse_wheel(self, event):
