@@ -3,7 +3,7 @@ from tkinter.messagebox import showinfo
 from webbrowser import open_new_tab
 from PIL import Image, ImageTk
 from platform import system
-import sqlite3
+from sqlite3 import connect, OperationalError
 
 # Colors
 fg = "#3f3f3f" # Foreground active
@@ -18,12 +18,36 @@ width = 1050
 height = 620
 c_card_id = 0 # Card's index (is used for positioning them on screen)
 c_cards = [] # Empty list for class cards
-# Cards example: [["db_id", "Year", "<class_instance>"], ...]
+# ? Cards example: [["db_id", "Year", "<class_instance>"], ...]
 s_card_id = 0 # Card's index (is used for positioning them on screen)
 s_cards = [] # Empty list for subject cards
-# Cards example: [["db_id", "Year", "<class_instance>"], ...]
+# ? Cards example: [["db_id", "Year", "<class_instance>"], ...]
 lessons = [] # Empty list for lessons
-# Lessons example: [["Lesson", hours, "class"]]
+# Lessons example: [[id, hours, "class", "Lesson", "teacher", object]]
+classes = {}
+
+
+# TODO: Figure out the data
+def create_db(table: str, args: tuple(str)):
+
+    try:
+
+        connection = connect("data.db")
+
+        cursor = connection.cursor()
+
+        cursor.execute(f"CREATE TABLE {table} {args}")
+
+        connection.commit()
+
+        connection.close()
+
+    except OperationalError as e:
+        print(all(["table", "exists" in str(e)]))
+
+
+def create_class():
+    alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 
 
 class MainAppBody(Tk):
@@ -33,8 +57,8 @@ class MainAppBody(Tk):
         self.title("School schedule generator")  # App's title
         # Icon file based on OS
         if system().lower() == "linux":
-            self.iconbitmap("@icon.xbm")
-        elif system().lower() == "windows":
+            self.iconbitmap("@images/icon.xbm")
+        elif system().lower() == "images/windows":
             self.iconbitmap("icon.ico")
         self.geometry(f"{width}x{height}+{(self.winfo_screenwidth() - width) // 2}+{(self.winfo_screenheight() - height) // 2}")  # Middle of the screen
         self.resizable(0, 0)
@@ -50,7 +74,7 @@ class MainAppBody(Tk):
         help_menu.add_command(label="Помощь", command=lambda: Help(self))
         help_menu.add_separator()
         help_menu.add_command(label="О приложении", command=lambda: About(self))
-        menubar.add_cascade(label="Help", menu=help_menu, background=bg1, activebackground=bg2, activeforeground=fg)
+        menubar.add_cascade(label="Помощь...", menu=help_menu, background=bg1, activebackground=bg2, activeforeground=fg)
         menubar.add_command(label="\u22EE", activebackground=menubar.cget("background"))
         menubar.add_command(label="Текущее положение ->", activebackground=menubar.cget("background"))
         self.config(menu=menubar)
@@ -111,13 +135,13 @@ class MainAppBody(Tk):
             self.main_page.canvas.yview_scroll(direction, "units")
 
 
-class CardDelWarn(Toplevel):
-    """Card deletion warning"""
+class CCardDelWarn(Toplevel):
+    """Class card deletion warning"""
     def __init__(self, parent, card):
         Toplevel.__init__(self, parent)
         self.card = card
         self.transient(parent)
-        self.wait_visibility() # Fixes softlock, which happens when grab_set fails
+        self.wait_visibility() # * Fixes softlock, which happens when grab_set fails
         self.grab_set()
         self.title('Warning - class deletion')
         self.geometry(f"367x102+{(self.winfo_screenwidth() - 367) // 2}+{(self.winfo_screenheight() - 102) // 2}")
@@ -130,7 +154,7 @@ class CardDelWarn(Toplevel):
         mes_cont.columnconfigure(0, weight=1)
         mes_cont.columnconfigure(1, weight=1)
 
-        photo = ImageTk.PhotoImage(Image.open('warning.png'))
+        photo = ImageTk.PhotoImage(Image.open('images/warning.png'))
         label = Label(mes_cont, image=photo)
         label.image = photo
         label.grid(row=0, column=0, padx=6)
@@ -161,15 +185,73 @@ class CardDelWarn(Toplevel):
                 self.after(1, lambda: parent.geometry(f"{parent.winfo_width()}x{parent.winfo_height() - 1}"))
                 self.destroy()
             else:
+                self.self_delete()
+
+        Button(but_cont, text='ДА', command=lambda: run(True), width=7).grid(row=0, column=0, padx=10)
+        Button(but_cont, text="НЕТ", command=run, width=7).grid(row=0, column=1, padx=10)
+
+    def self_delete(self):
+        self.destroy()
+        self.card.remove_btn.config(state="normal")
+
+
+class SCardDelWarn(Toplevel):
+    """Subject card deletion warning"""
+    def __init__(self, parent, card):
+        Toplevel.__init__(self, parent)
+        self.card = card
+        self.transient(parent)
+        self.wait_visibility() # * Fixes softlock, which happens when grab_set fails
+        self.grab_set()
+        self.title('Warning - class deletion')
+        self.geometry(f"367x102+{(self.winfo_screenwidth() - 367) // 2}+{(self.winfo_screenheight() - 102) // 2}")
+        self.resizable(0, 0)
+        self.protocol('WM_DELETE_WINDOW', self.self_delete)
+
+        mes_cont = Frame(self)
+        mes_cont.pack(side="top", expand=True, fill="x", anchor="w")
+        mes_cont.rowconfigure(0, weight=1)
+        mes_cont.columnconfigure(0, weight=1)
+        mes_cont.columnconfigure(1, weight=1)
+
+        photo = ImageTk.PhotoImage(Image.open('images/warning.png'))
+        label = Label(mes_cont, image=photo)
+        label.image = photo
+        label.grid(row=0, column=0, padx=6)
+        text = f"Вы уверены, что хотите удалить\nпредмет  '{card.name}'?"
+        Label(mes_cont, text=text, font=("Times New Roman", 12, "bold")).grid(row=0, column=1, sticky="w")
+
+        but_cont = Frame(self)
+        but_cont.pack(side="bottom", pady=7)
+        but_cont.rowconfigure(0, weight=1)
+        but_cont.columnconfigure(0, weight=1)
+        but_cont.columnconfigure(1, weight=1)
+
+        def run(do=False):
+            if do:
+                found = False
+                # Find and delete element from list "s_cards"
+                for pos, info in enumerate(s_cards):
+                    if card in info:
+                        found = True
+                        s_cards.remove(info)
+                    if found and 0 <= pos < len(s_cards):
+                        s_cards[pos][0] = s_cards[pos][0] - 1
+                        s_cards[pos][-1].grid_forget()
+                        s_cards[pos][-1].grid(row=(pos // 3), column=((pos % 3)), padx=15, pady=15)
+
+                card.destroy()
+                parent.geometry(f"{parent.winfo_width()}x{parent.winfo_height() + 1}")
+                self.after(1, lambda: parent.geometry(f"{parent.winfo_width()}x{parent.winfo_height() - 1}"))
                 self.destroy()
-                card.remove_btn.config(state="normal")
+            else:
+                self.destroy()
 
         Button(but_cont, text='Добавить', command=lambda: run(True), width=7).grid(row=0, column=0, padx=10)
         Button(but_cont, text="Отмена", command=run, width=7).grid(row=0, column=1, padx=10)
 
     def self_delete(self):
         self.destroy()
-        self.card.remove_btn.config(state="normal")
 
 
 class AutoScrollbar(Scrollbar):
@@ -200,17 +282,17 @@ class Year(Frame):
         c_cards.append(data)
         c_cards[-2], c_cards[-1] = c_cards[-1], c_cards[-2]
         c_cards[-1][0] += 1
-        c_cards[-1][-1].grid(row=c_cards[-1][0] // 12, column=c_cards[-1][0] % 12)
+        c_cards[-1][-1].grid(row=c_cards[-1][0] // 12, column=c_cards[-1][0] % 12, padx=15, pady=15)
 
         def remove():
             remove_btn.config(state="disabled")
-            CardDelWarn(parent.master.master.master.master, self)
+            CCardDelWarn(parent.master.master.master.master, self)
 
         year_info = Button(self, text=full_year, width=5, pady=12, bd=0, cursor="hand2", activebackground="#dfdfdf",
                            command=lambda: parent.master.master.master.master.show_frame(LessonSchedule, parent.master.master.master, self.full_year))
         year_info.grid(row=0, column=0, pady=3)
 
-        minus = ImageTk.PhotoImage(Image.open('remove.png').resize((25, 25)))
+        minus = ImageTk.PhotoImage(Image.open('images/remove.png').resize((25, 25)))
         remove_btn = Button(self, image=minus, width=70, height=25, bd=0, bg=bg2, activebackground=bg, command=remove, cursor="hand2")
         remove_btn.image = minus
         remove_btn.grid(row=1, column=0, sticky="nw")
@@ -225,38 +307,65 @@ class Year(Frame):
 
 
 class Subject(Frame):
-    def __init__(self, parent, name, teacher):
-        Frame.__init__(self, parent)
+    def __init__(self, parent, name, teacher, year):
+        global s_cards, s_card_id
+        Frame.__init__(self, parent, bg=bg)
+        data = [s_card_id, 1, year, name, teacher, parent.master.master.master.year, self]
+        # * [[id, hours, "class", "Lesson", "teacher", object]]
+        s_card_id += 1
+        s_cards.append(data)
+        s_cards[-2], s_cards[-1] = s_cards[-1], s_cards[-2]
+        s_cards[-1][0] += 1
+        s_cards[-1][-1].grid(row=s_cards[-1][0] // 3, column=s_cards[-1][0] % 3, padx=15, pady=15)
+        self.name = name
 
         def increase():
-            amount.config(text=(int(amount.cget("text")) + 1))
+            if (int(amount.cget("text")) + 1) <= 99:
+                amount.config(text=(int(amount.cget("text")) + 1))
+            else:
+                showinfo("Limit -- hours", "Вы достигли максимального доступного значения.")
 
         def decrease():
-            amount.config(text=(int(amount.cget("text")) - 1))
+            if int(amount.cget("text")) - 1 != 0:
+                amount.config(text=(int(amount.cget("text")) - 1))
+            else:
+                SCardDelWarn(parent.master.master.master.master, self)
 
-        element_1 = Frame(self)
-        element_1.grid(row=0, column=0)
+        element_1 = Frame(self, bg=bg)
+        element_1.grid(row=0, column=0, padx=4, pady=4)
+        if len(name) < 11:
+            Label(element_1, text=name, font=s_f, bg=bg).grid(row=0, column=0)
+        else:
+            Label(element_1, text=name, font=("Arial", 8), bg=bg).grid(row=0, column=0)
+        if len(teacher) < 11:
+            Label(element_1, text=f"({teacher})", font=s_f, bg=bg).grid(row=1, column=0)
+        else:
+            Label(element_1, text=f"({teacher})", font=("Arial", 8), bg=bg).grid(row=1, column=0)
 
-        Label(element_1, text=name, font=s_f).grid(row=0, column=0)
-        Label(element_1, text=f"({teacher})", font=s_f).grid(row=1, column=0)
+        element_2 = Frame(self, padx=20, bg=bg)
+        element_2.grid(row=0, column=1, pady=4)
 
-        element_2 = Frame(self, padx=20)
-        element_2.grid(row=0, column=1)
-
-        plus = ImageTk.PhotoImage(Image.open('add.png').resize((25, 25)))
-        increase_hours = Button(element_2, image=plus, bg=bg2, bd=0, activebackground=bg, cursor="hand2", font=s_f,
-                            command=increase)
-        increase_hours.image = plus
-        increase_hours.grid(row=0, column=0, sticky="nsew")
-
-        amount = Label(element_2, text=1, font=s_f)
-        amount.grid(row=0, column=1, sticky="nsew")
-
-        minus = ImageTk.PhotoImage(Image.open('remove.png').resize((25, 25)))
-        decrease_hours = Button(element_2, image=minus, bg=bg2, bd=0, activebackground=bg, cursor="hand2", font=s_f,
+        minus = ImageTk.PhotoImage(Image.open('images/remove.png').resize((25, 25)))
+        decrease_hours = Button(element_2, image=minus, bg=bg1, bd=0, activebackground=bg, cursor="hand2", font=s_f,
                                command=decrease)
         decrease_hours.image = minus
-        decrease_hours.grid(row=0, column=2, sticky="nsew")
+        decrease_hours.grid(row=0, column=0, sticky="nsew")
+
+        amount = Label(element_2, text=1, font=s_f, justify="center", bg=bg, width=2)
+        amount.grid(row=0, column=1, sticky="nsew", padx=3)
+
+        plus = ImageTk.PhotoImage(Image.open('images/add.png').resize((25, 25)))
+        increase_hours = Button(element_2, image=plus, bg=bg1, bd=0, activebackground=bg, cursor="hand2", font=s_f,
+                            command=increase)
+        increase_hours.image = plus
+        increase_hours.grid(row=0, column=2, sticky="nsew")
+
+    def grid(self, **kwargs):
+        if "padx" in kwargs:
+            del(kwargs["padx"])
+        if "pady" in kwargs:
+            del(kwargs["pady"])
+        self.grid_configure(kwargs, padx=5, pady=15, sticky="nw")
 
 
 class MainPage(Frame):
@@ -302,7 +411,7 @@ class MainPage(Frame):
         ui = Frame(canvas) # User Interface
         canvas.create_window((0, 0), window=ui, anchor="nw")
 
-        plus = ImageTk.PhotoImage(Image.open('add.png').resize((50, 50)))
+        plus = ImageTk.PhotoImage(Image.open('images/add.png').resize((50, 50)))
         add_card = Button(ui, image=plus, width=50, height=50, bg=bg2, bd=0, activebackground=bg, cursor="hand2",
                           command=lambda: AddYear(parent, [ui, add_card.grid_info()["row"], add_card.grid_info()["column"]]))
         add_card.image = plus
@@ -310,7 +419,7 @@ class MainPage(Frame):
         add_card.grid(row=0, column=0, padx=15, pady=15)
 
         for i in range(230):
-            Year(ui, i, "A").grid(row=(i // 12), column=((i % 12)))
+            Year(ui, i, "А").grid(row=(i // 12), column=((i % 12)))
 
         self.parent.bind("<MouseWheel>", self.mouse_wheel) # Windows mouse wheel event
         self.parent.bind("<Button-4>", self.mouse_wheel) # Linux mouse wheel event (Up)
@@ -413,11 +522,11 @@ class AddYear(Toplevel):
 
 
 class AddSubject(Toplevel):
-    def __init__(self, parent, location):
-        Toplevel.__init__(self, parent)
+    def __init__(self, parent, location: list):
+        Toplevel.__init__(self, parent, bg="#898989")
         view = Frame(self)
         view.pack(pady=10, padx=10, fill="both", expand=True)
-        self.title("Add lesson")
+        self.title("Add subject")
         self.geometry(f"500x500+{(self.winfo_screenwidth() - 500) // 2}+{(self.winfo_screenheight() - 500) // 2}")
         self.resizable(0, 0)
         self.transient(parent)
@@ -428,27 +537,41 @@ class AddSubject(Toplevel):
             self.destroy()
 
         def add():
-            _number = number.get()
-            _lesson = lesson.get().upper()
-            if _number != "" and _lesson != "":
-                number.delete(0, "end")
-                lesson.delete(0, "end")
+            _subject = subject.get()
+            _teacher = teacher.get()
+            if _subject != "" and _teacher != "":
+                subject.delete(0, "end")
+                teacher.delete(0, "end")
+                # Find and delete element from list "c_cards"
+                for info in c_cards:
+                    if f"{_subject}{_teacher}" in info:
+                        showinfo("Class exists", f"Класс {_subject}{_teacher} уже существует попробуйте другой")
+                        break
+                else:
+                    Subject(location[0], _subject, _teacher, location[0].master.master.master.year).grid(row=location[1], column=location[2])
+                    cancel()
             else:
-                showinfo("Data is missing", f"Вы забыли ввести {location}")
+                if _subject == "" and _teacher == "":
+                    message = "предмет и его учителя. Попробуйте:\nМатематика\nИ.И.Иванов"
+                elif _subject == "":
+                    message = f"учителя. Попробуйте:\nМатематика\n{_teacher}"
+                else:
+                    message = f"предмет. Попробуйте: {_subject} И.И.Иванов"
+                showinfo("Data is missing", f"Вы забыли ввести {message}")
 
         header = Label(view, text="Добавить предмет:", font=ss_f)
         header.pack()
 
-        class_cont = Frame(view)
-        class_cont.pack(pady=10)
+        subject_cont = Frame(view)
+        subject_cont.pack(pady=10)
 
-        is_valid_i = (parent.register(self.validate_int), '%d', '%i', '%P') # action, index, value
-        is_valid_c = (parent.register(self.validate_char), '%d', '%P') # action, value
-        Label(class_cont, text="Информация об уроке:", font=ss_f).grid(row=0, column=0)
-        number = Entry(class_cont, width=2, validatecommand=is_valid_i, validate="key", font=ss_f)
-        number.grid(row=0, column=1) # Number
-        lesson = Entry(class_cont, width=26, validatecommand=is_valid_c, validate="key", font=ss_f)
-        lesson.grid(row=0, column=2) # Lesson
+        is_valid_c = (parent.register(self.validate_char), '%d', '%P') # action, index, value
+        Label(subject_cont, text="Предмет:", font=ss_f).grid(row=0, column=0)
+        subject = Entry(subject_cont, width=21, validatecommand=is_valid_c, validate="key", font=ss_f)
+        subject.grid(row=0, column=1) # Letter
+        Label(subject_cont, text="Учитель:", font=ss_f).grid(row=1, column=0)
+        teacher = Entry(subject_cont, width=21, validatecommand=is_valid_c, validate="key", font=ss_f)
+        teacher.grid(row=1, column=1)
 
         btn_cont = Frame(view)
         btn_cont.pack(side="bottom", pady=5)
@@ -459,22 +582,9 @@ class AddSubject(Toplevel):
         add_btn.grid(row=0, column=1, padx=10, pady=5)
         self.add_btn = add_btn
 
-    def validate_int(self, action, index, value):
-        if value != "":
-            # Integers does not start from zero
-            if index == "0" and value == "0":
-                return False
-        # Entry validation
-        if len(value) > 1 and action == "1":  # Limiting input length
-            return False
-        elif all(symbol in "0123456789" for symbol in value):  # Allowed values
-            return True
-        else:
-            return False
-
     def validate_char(self, action, value):
         # Entry validation
-        if len(value) > 25 and action == "1":  # Limiting input length
+        if len(value) > 20 and action == "1":  # Limiting input length
             return False
         elif all(symbol.lower() in "абвгдежзийклмнопрстуфхцчшщъыьэюяё .," for symbol in value):  # Allowed values
             return True
@@ -658,13 +768,13 @@ class ScheduleTable(Frame):
                                  "Добавте урок нажав 'Добавить урок'.")
 
         # Buttons:
-        plus = ImageTk.PhotoImage(Image.open('add.png').resize((25, 25)))
+        plus = ImageTk.PhotoImage(Image.open('images/add.png').resize((25, 25)))
         add_lesson = Button(self, image=plus, bg=bg2, bd=0, activebackground=bg, cursor="hand2", compound="left", text="Добавить урок", font=s_f,
                             command=add)
         add_lesson.image = plus
         add_lesson.grid(row=10, column=0, columnspan=2, pady=2, sticky="nsew")
 
-        minus = ImageTk.PhotoImage(Image.open('remove.png').resize((25, 25)))
+        minus = ImageTk.PhotoImage(Image.open('images/remove.png').resize((25, 25)))
         remove_lesson = Button(self, image=minus, bg=bg2, bd=0, activebackground=bg, cursor="hand2", compound="left", text="Удалить урок", font=s_f,
                                command=remove)
         remove_lesson.image = minus
@@ -766,6 +876,14 @@ class LessonHoursA(Frame):
         ui = Frame(canvas) # User Interface
         canvas.create_window((0, 0), window=ui, anchor="nw")
 
+        plus = ImageTk.PhotoImage(Image.open('images/add.png').resize((25, 25)))
+        add_card = Button(ui, image=plus, height=50, bg=bg2, bd=0, activebackground=bg, cursor="hand2", compound="left",
+                          command=lambda: AddSubject(parent, [ui, add_card.grid_info()["row"], add_card.grid_info()["column"]]),
+                          text="Добавить предмет", font=s_f)
+        add_card.image = plus
+        s_cards.append([0, None, add_card])
+        add_card.grid(row=0, column=0, padx=15, pady=15)
+
         def cancel():
             parent.show_frame(LessonSchedule, self, extra=year)
 
@@ -819,6 +937,17 @@ class LessonHoursI(Frame):
 
         ui = Frame(canvas) # User Interface
         canvas.create_window((0, 0), window=ui, anchor="nw")
+
+        plus = ImageTk.PhotoImage(Image.open('images/add.png').resize((25, 25)))
+        add_card = Button(ui, image=plus, height=50, bg=bg2, bd=0, activebackground=bg, cursor="hand2", compound="left",
+                          command=lambda: AddSubject(parent, [ui, add_card.grid_info()["row"], add_card.grid_info()["column"]]),
+                          text="Добавить предмет", font=s_f)
+        add_card.image = plus
+        add_card.grid(row=0, column=0, padx=15, pady=15)
+        if not s_cards:
+            s_cards.append([0, None, add_card])
+        else:
+            print("exists")
 
         def cancel():
             parent.show_frame(LessonSchedule, self, extra=year)
