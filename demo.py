@@ -183,11 +183,10 @@ class AutoScrollbar(Scrollbar):
 
 class Links(Label):
     def __init__(self, parent, text: str, profile_url: str, **kw):
-        Button.__init__(self, parent, text=text, font=ss_f, fg=fg, bd=0, activebackground="#d9d9d9", activeforeground="blue", **kw)
+        Button.__init__(self, parent, text=text, font=ss_f, fg=fg, bd=0, activebackground="#d9d9d9", activeforeground="blue", command=lambda: open_new_tab(profile_url), **kw)
 
         self.bind("<Leave>", lambda _: self.config(font=ss_f, cursor=""))
         self.bind("<Enter>", lambda _: self.config(font=ss_f + ("underline",), cursor="hand2"))
-        self.bind("<Button-1>", lambda _: open_new_tab(profile_url))
 
 
 class Year(Frame):
