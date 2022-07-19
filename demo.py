@@ -28,7 +28,7 @@ classes = {}
 
 
 # TODO: Figure out the data
-def create_db(table: str, args: tuple(str)):
+def create_db(table: str, args: tuple[str]):
 
     try:
 
