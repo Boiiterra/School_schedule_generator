@@ -1,12 +1,12 @@
 # School_schedule_generator
 
 ## Description
+
 The application is in Russian language. \
 This application provides tools that are going to help in school schedule creation process. The schedule itself will be exported in an excel document. Entered data after exporting schedule won't be deleted unless user decides to do so. Also all data is going to be easily displayed if user needs to check whether it is correct and changed if desire.
 
-<br>
-
 ## Project is in development
+
 - [ ] Create UI
   - [x] Main window
     - [x] Class' cards
@@ -23,12 +23,9 @@ This application provides tools that are going to help in school schedule creati
   - [ ] Tools to edit lessons schedule
     - [ ] Add limiter for lessons per week
   - [ ] Import/export schedule
-  - [ ] Algorithm that created schedule automatically 
+  - [ ] Algorithm that creates schedule automatically
 
-<br>
-<p align="right">(<a href="#top" title="To the top">To the top</a>)</p>
-
-# Authors
+## Authors
 
 <table>
     <tr align="center" width="60">
@@ -54,4 +51,3 @@ This application provides tools that are going to help in school schedule creati
 </table>
 <br>
 <p align="right">(<a href="#top" title="To the top">To the top</a>)</p>
-
